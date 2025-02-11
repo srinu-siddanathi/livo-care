@@ -129,5 +129,9 @@ class DatabaseSeeder extends Seeder
         foreach ($tests as $test) {
             Test::create($test);
         }
+
+        $this->call([
+            TestSeeder::class,
+        ]);
     }
 }
