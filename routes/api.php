@@ -12,6 +12,7 @@ Route::get('/test', function() {
 });
 
 // Authentication Routes
+Route::post('/doctor/register', [DoctorAuthController::class, 'register']);
 Route::post('/doctor/login', [DoctorAuthController::class, 'login']);
 Route::post('/diagnostic/login', [DiagnosticAuthController::class, 'login']);
 
@@ -21,6 +22,7 @@ Route::get('/tests', [TestController::class, 'index']);
 // Doctor Routes
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/doctor/logout', [DoctorAuthController::class, 'logout']);
+    Route::put('/doctor/profile', [DoctorAuthController::class, 'update']);
     Route::post('/prescriptions', [PrescriptionController::class, 'store']);
     Route::get('/doctor/prescriptions', [PrescriptionController::class, 'doctorPrescriptions']);
 });
@@ -28,6 +30,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 // Diagnostic Center Routes
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/diagnostic/logout', [DiagnosticAuthController::class, 'logout']);
+    Route::get('/doctors', [DoctorAuthController::class, 'index']);
     Route::get('/prescriptions', [PrescriptionController::class, 'allPrescriptions']);
     Route::patch('/prescriptions/{prescription}/status', [PrescriptionController::class, 'updateStatus']);
 }); 
