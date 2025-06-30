@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\DoctorAuthController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 // Test route to verify API is working
 Route::get('/test', function() {
@@ -31,6 +32,30 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/diagnostic/logout', [DiagnosticAuthController::class, 'logout']);
     Route::get('/doctors', [DoctorAuthController::class, 'index']);
+    
+    // Move the specific route before the general one
+    Route::get('/prescriptions/by-doctor/{doctor_id}', [PrescriptionController::class, 'prescriptionsByDoctor']);
     Route::get('/prescriptions', [PrescriptionController::class, 'allPrescriptions']);
     Route::patch('/prescriptions/{prescription}/status', [PrescriptionController::class, 'updateStatus']);
+});
+
+// Test Routes (for development only)
+Route::post('/test/notification', function(Request $request) {
+    $deviceToken = 'ePtKUGJHRHqxZJf50w8rr_:APA91bEqz3KUsvzHw0lBo4GcpKxWpcuJg2aLUhXagArvgWo_v6nKFQMSkUb37dcbVSz7Kxst8J1wZFobrxpBIMaGysVER-_OdUNqs0KT1U9PO0BPSxCSbFc';
+
+    $fcmService = new \App\Services\FCMService();
+    $result = $fcmService->sendNotification(
+        $deviceToken,
+        'Test Notification',
+        $request->input('message', 'This is a test notification'),
+        [
+            'test' => true,
+            'timestamp' => now()->toISOString()
+        ]
+    );
+
+    return response()->json([
+        'message' => $result['success'] ? 'Notification sent' : 'Notification failed',
+        'result' => $result
+    ]);
 }); 

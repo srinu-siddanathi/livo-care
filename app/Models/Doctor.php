@@ -15,9 +15,9 @@ class Doctor extends Authenticatable
         'name',
         'email',
         'password',
-        'specialization',
         'mobile',
-        'gender',
+        'specialization',
+        'gender'
     ];
 
     protected $hidden = [
@@ -27,6 +27,11 @@ class Doctor extends Authenticatable
 
     public function prescriptions()
     {
-        return $this->hasMany(Prescription::class);
+        return $this->hasMany(Prescription::class, 'doctor_id');
+    }
+
+    public function deviceTokens()
+    {
+        return $this->morphMany(DeviceToken::class, 'tokenable');
     }
 } 

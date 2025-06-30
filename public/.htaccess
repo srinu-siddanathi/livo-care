@@ -19,3 +19,14 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Add this to your existing .htaccess
+<FilesMatch "(?i)\.(php|php3?|phtml)$">
+    Order Deny,Allow
+    Deny from All
+</FilesMatch>
+
+<Files ~ "^\.">
+    Order Allow,Deny
+    Deny from All
+</Files>

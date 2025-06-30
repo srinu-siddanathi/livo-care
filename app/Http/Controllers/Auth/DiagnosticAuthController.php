@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\DiagnosticCenter;
+use App\Models\DeviceToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,6 +15,7 @@ class DiagnosticAuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'device_id' => 'nullable|string'
         ]);
 
         $center = DiagnosticCenter::where('email', $request->email)->first();
@@ -22,6 +24,20 @@ class DiagnosticAuthController extends Controller
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);
+        }
+
+        // Store device token if provided
+        if ($request->device_id) {
+            DeviceToken::updateOrCreate(
+                [
+                    'tokenable_type' => DiagnosticCenter::class,
+                    'tokenable_id' => $center->id,
+                    'device_id' => $request->device_id
+                ],
+                [
+                    'device_id' => $request->device_id
+                ]
+            );
         }
 
         $token = $center->createToken('auth_token')->plainTextToken;

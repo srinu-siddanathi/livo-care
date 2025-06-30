@@ -22,4 +22,9 @@ class DiagnosticCenter extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function deviceTokens()
+    {
+        return $this->morphMany(DeviceToken::class, 'tokenable');
+    }
 } 

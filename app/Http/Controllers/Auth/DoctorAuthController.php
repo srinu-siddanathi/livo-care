@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
+use App\Models\DeviceToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +16,7 @@ class DoctorAuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'device_id' => 'nullable|string'
         ]);
 
         $doctor = Doctor::where('email', $request->email)->first();
@@ -23,6 +25,20 @@ class DoctorAuthController extends Controller
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);
+        }
+
+        // Store device token if provided
+        if ($request->device_id) {
+            DeviceToken::updateOrCreate(
+                [
+                    'tokenable_type' => Doctor::class,
+                    'tokenable_id' => $doctor->id,
+                    'device_id' => $request->device_id
+                ],
+                [
+                    'device_id' => $request->device_id
+                ]
+            );
         }
 
         $token = $doctor->createToken('auth_token')->plainTextToken;
@@ -127,19 +143,39 @@ class DoctorAuthController extends Controller
 
     public function index()
     {
+        // Get doctors with prescription counts
         $doctors = Doctor::select([
-            'id',
-            'name',
-            'email',
-            'specialization',
-            'mobile',
-            'gender',
-            'created_at'
-        ])->get();
+            'doctors.id',
+            'doctors.name',
+            'doctors.email',
+            'doctors.mobile',
+            'doctors.gender',
+            'doctors.specialization',
+            'doctors.created_at'
+        ])
+        ->selectRaw('(SELECT COUNT(*) FROM prescriptions WHERE prescriptions.doctor_id = doctors.id) as prescriptions_count')
+        ->get();
+
+        \Log::info('Doctors query result:', [
+            'raw_data' => $doctors->toArray()
+        ]);
+
+        $mappedDoctors = $doctors->map(function ($doctor) {
+            return [
+                'id' => $doctor->id,
+                'name' => $doctor->name,
+                'email' => $doctor->email,
+                'mobile' => $doctor->mobile,
+                'gender' => $doctor->gender,
+                'specialization' => $doctor->specialization,
+                'prescriptions_count' => (int) $doctor->prescriptions_count,
+                'created_at' => $doctor->created_at->format('Y-m-d')
+            ];
+        });
 
         return response()->json([
             'message' => 'Doctors retrieved successfully',
-            'data' => $doctors
+            'data' => $mappedDoctors
         ]);
     }
 } 
